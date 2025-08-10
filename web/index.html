@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>STEPA I LOVE YOU</title>
+  <style>
+    #app {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <input
+          v-model="query"
+          type="text"
+          placeholder="Введите текст"
+  />
+  <button @click="fetchUsers">Найти</button>
+
+  <div v-if="users.length">
+    <h3>Результаты поиска:</h3>
+    <ul>
+      <li v-for="(user, index) in users" :key="index">
+        {{ user.name }} — {{ user.email }}
+      </li>
+    </ul>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+  new Vue({
+    el: '#app',
+    data: {
+      query: '',
+      users: []
+    },
+    methods: {
+      async fetchUsers() {
+        try {
+          const response = await axios.get("http://localhost:8080/users", {
+            params: { search: this.query }
+          });
+          this.users = response.data;
+        } catch (error) {
+          console.error("Ошибка при получении данных:", error);
+        }
+      }
+    }
+  })
+
+</script>
+</body>
+</html>
