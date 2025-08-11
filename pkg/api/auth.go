@@ -23,6 +23,39 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+func authCookieMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 1. Читаем токен из cookie
+		tokenString, err := c.Cookie("token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token cookie required"})
+			c.Abort()
+			return
+		}
+
+		// 2. Парсим токен
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
+			return jwtKey, nil
+		})
+
+		if err != nil || !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		// 3. Достаём данные из claims и кладём в контекст
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			c.Set("userID", claims["user_id"])
+		}
+
+		c.Next()
+	}
+}
+
 func signinHandler(c *gin.Context) {
 	var creds Credentials
 	if err := c.ShouldBindJSON(&creds); err != nil {
