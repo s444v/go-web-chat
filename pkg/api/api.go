@@ -12,4 +12,5 @@ func HandlersInit(router *gin.Engine) {
 	})
 	//router.Static("/static", "./web/static")
 	router.GET("/users", getUsers)
+	router.POST("/login", signinHandler)
 }
