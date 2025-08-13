@@ -23,26 +23,29 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func authCookieMiddleware() gin.HandlerFunc {
+func authCookieMiddleware(next gin.HandlerFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 1. Читаем токен из cookie
 		tokenString, err := c.Cookie("token")
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token cookie required"})
+			if strings.HasPrefix(c.Request.URL.Path, "/api") {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+				c.Abort()
+				return
+			}
+			c.Redirect(http.StatusFound, "/static/login.html")
 			c.Abort()
 			return
 		}
-
-		// 2. Парсим токен
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.ErrSignatureInvalid
-			}
-			return jwtKey, nil
-		})
-
+		token, err := validateToken(tokenString)
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			if strings.HasPrefix(c.Request.URL.Path, "/api") {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+				c.Abort()
+				return
+			}
+			// Обычная страница — редирект на login.html
+			c.Redirect(http.StatusFound, "/static/login.html")
 			c.Abort()
 			return
 		}
@@ -89,8 +92,22 @@ func signinHandler(c *gin.Context) {
 		return
 	}
 
+	c.SetCookie("token", tokenString, 300, "/", "", false, true)
 	c.JSON(http.StatusOK, gin.H{
 		"token": tokenString,
 		"roles": roles, // отдаём и в ответе
 	})
+}
+
+func validateToken(tokenString string) (*jwt.Token, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrSignatureInvalid
+		}
+		return jwtKey, nil
+	})
+	if err != nil {
+		return token, err
+	}
+	return token, nil
 }

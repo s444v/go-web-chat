@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Вход</title>
+<style>
+    :root {
+        --bg: #0f172a; /* slate-900 */
+        --card: #111827; /* gray-900 */
+        --muted: #9ca3af; /* gray-400 */
+        --text: #e5e7eb; /* gray-200 */
+        --accent: #2563eb; /* blue-600 */
+        --accent-2: #60a5fa; /* blue-400 */
+        --danger: #ef4444; /* red-500 */
+        --ring: rgba(96,165,250,.45);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        color: var(--text);
+        background: radial-gradient(1200px 800px at 10% 10%, rgba(96,165,250,.12), transparent 60%),
+                    radial-gradient(1000px 600px at 90% 20%, rgba(34,197,94,.08), transparent 55%),
+                    var(--bg);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+    }
+    .card {
+        width: 100%;
+        max-width: 420px;
+        background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(148,163,184,.2);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.35);
+        padding: 28px;
+    }
+    h1 {
+        margin: 0 0 18px 0;
+        font-weight: 700;
+        letter-spacing: .2px;
+        font-size: 22px;
+    }
+    p.subtle { margin-top: 0; margin-bottom: 20px; color: var(--muted); font-size: 14px; }
+    label { display: block; font-size: 14px; margin-bottom: 6px; color: #d1d5db; }
+    .field { margin-bottom: 16px; }
+    .input {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(148,163,184,.25);
+        background: rgba(17,24,39,.6);
+        color: var(--text);
+        outline: none;
+        transition: box-shadow .15s ease, border-color .15s ease;
+    }
+    .input::placeholder { color: #9ca3af; }
+    .input:focus { border-color: var(--accent-2); box-shadow: 0 0 0 4px var(--ring); }
+
+    .password-wrap { position: relative; }
+    .toggle-btn {
+        position: absolute;
+        right: 10px; top: 50%; transform: translateY(-50%);
+        background: none; border: none; color: var(--muted);
+        cursor: pointer; padding: 6px; border-radius: 8px;
+    }
+    .toggle-btn:focus { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+
+    .btn {
+        width: 100%;
+        display: inline-flex; align-items: center; justify-content: center;
+        gap: 8px;
+        padding: 12px 16px;
+        font-weight: 600; letter-spacing: .2px;
+        border-radius: 12px; border: 1px solid rgba(37,99,235,.6);
+        background: linear-gradient(180deg, var(--accent), #1d4ed8);
+        color: white; cursor: pointer;
+        transition: transform .06s ease, filter .15s ease, box-shadow .15s ease;
+        box-shadow: 0 8px 20px rgba(37,99,235,.35);
+    }
+    .btn:hover { filter: brightness(1.05); }
+    .btn:active { transform: translateY(1px); }
+    .btn[disabled] { opacity: .7; cursor: not-allowed; filter: none; }
+
+    .row {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; margin-top: 8px; margin-bottom: 6px;
+        color: var(--muted); font-size: 13px;
+    }
+
+    .error { display:none; margin-bottom: 12px; color: #fecaca; font-size: 13px; }
+    .footer { margin-top: 14px; font-size: 12px; color: var(--muted); text-align: center; }
+    a { color: var(--accent-2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<main class="card" role="main">
+    <h1>Войти</h1>
+    <p class="subtle">Введите логин и пароль, чтобы продолжить.</p>
+
+    <div id="error" class="error" role="alert" aria-live="assertive"></div>
+
+    <form id="loginForm" novalidate>
+        <div class="field">
+            <label for="username">Логин</label>
+            <input id="username" name="username" class="input" type="text" autocomplete="username" placeholder="ваш логин" required maxlength="128" />
+        </div>
+
+        <div class="field password-wrap">
+            <label for="password">Пароль</label>
+            <input id="password" name="password" class="input" type="password" autocomplete="current-password" placeholder="••••••••" required minlength="4" />
+            <button type="button" class="toggle-btn" onclick="togglePassword()">👁️</button>
+        </div>
+
+        <button id="submitBtn" class="btn" type="submit">
+            <span id="btnText">Войти</span>
+            <span id="btnSpinner" style="display:none">⏳</span>
+        </button>
+
+        <div class="row">
+            <span></span>
+            <a href="#" onclick="alert('Забыл пароль: реализуйте ссылку на восстановление'); return false;">Забыли пароль?</a>
+        </div>
+
+        <div class="footer">Нажимая «Войти», вы соглашаетесь с условиями использования.</div>
+    </form>
+</main>
+
+<script>
+function togglePassword() {
+    const input = document.getElementById('password');
+    input.type = input.type === 'password' ? 'text' : 'password';
+    input.focus();
+}
+
+const form = document.getElementById('loginForm');
+const errorBox = document.getElementById('error');
+const submitBtn = document.getElementById('submitBtn');
+const btnText = document.getElementById('btnText');
+const btnSpinner = document.getElementById('btnSpinner');
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (!form.checkValidity()) {
+        errorBox.style.display = 'block';
+        errorBox.textContent = 'Проверьте, что все поля заполнены корректно.';
+        return;
+    }
+
+    submitBtn.disabled = true;
+    btnText.style.display = 'none';
+    btnSpinner.style.display = 'inline';
+
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    try {
+        const res = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // важно, чтобы cookie сохранилась
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            errorBox.style.display = 'block';
+            errorBox.textContent = data.error || 'Ошибка входа';
+        } else {
+            // Загружаем index.html с токеном из cookie
+            const page = await fetch('/static/index.html', { credentials: 'include' });
+            if (!page.ok) {
+                errorBox.style.display = 'block';
+                errorBox.textContent = 'Не удалось загрузить главную страницу';
+                return;
+            }
+
+            const html = await page.text();
+            document.open();
+            document.write(html);
+            document.close();
+        }
+    } catch (err) {
+        errorBox.style.display = 'block';
+        errorBox.textContent = 'Ошибка сети: ' + err.message;
+    } finally {
+        submitBtn.disabled = false;
+        btnText.style.display = 'inline';
+        btnSpinner.style.display = 'none';
+    }
+});
+
+</script>
+</body>
+</html>

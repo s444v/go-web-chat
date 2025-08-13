@@ -2,12 +2,14 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 // CheckPass проверяет пароль и возвращает список ролей пользователя.
 func CheckPass(username, password string) (bool, []string, error) {
+	fmt.Println(username, password)
 	query := `
 		SELECT u.id, p.password_hash
 		FROM users u
@@ -23,9 +25,15 @@ func CheckPass(username, password string) (bool, []string, error) {
 	} else if err != nil {
 		return false, nil, err
 	}
-
+	// pass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	// fmt.Println(string(pass))
+	// fmt.Println([]byte(hashedPassword))
+	// if err != nil {
+	// 	return false, nil, err
+	// }
 	// Сравниваем пароль
 	if bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)) != nil {
+		fmt.Println("nenenenennenenenenenene")
 		return false, nil, nil // пароль неверный
 	}
 
