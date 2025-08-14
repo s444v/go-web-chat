@@ -160,7 +160,7 @@ form.addEventListener('submit', async (e) => {
     const password = document.getElementById('password').value.trim();
 
     try {
-        const res = await fetch('/login', {
+        const res = await fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include', // важно, чтобы cookie сохранилась
@@ -174,7 +174,7 @@ form.addEventListener('submit', async (e) => {
             errorBox.textContent = data.error || 'Ошибка входа';
         } else {
             // Загружаем index.html с токеном из cookie
-            const page = await fetch('/static/index.html', { credentials: 'include' });
+            const page = await fetch('/', { credentials: 'include' });
             if (!page.ok) {
                 errorBox.style.display = 'block';
                 errorBox.textContent = 'Не удалось загрузить главную страницу';

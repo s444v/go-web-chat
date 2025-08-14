@@ -33,7 +33,7 @@ func authCookieMiddleware(next gin.HandlerFunc) gin.HandlerFunc {
 				c.Abort()
 				return
 			}
-			c.Redirect(http.StatusFound, "/static/login.html")
+			c.Redirect(http.StatusFound, "/api/login")
 			c.Abort()
 			return
 		}
@@ -45,7 +45,7 @@ func authCookieMiddleware(next gin.HandlerFunc) gin.HandlerFunc {
 				return
 			}
 			// Обычная страница — редирект на login.html
-			c.Redirect(http.StatusFound, "/static/login.html")
+			c.Redirect(http.StatusFound, "/api/login")
 			c.Abort()
 			return
 		}
