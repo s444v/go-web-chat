@@ -23,29 +23,18 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func authCookieMiddleware(next gin.HandlerFunc) gin.HandlerFunc {
+func authCookieMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 1. Читаем токен из cookie
 		tokenString, err := c.Cookie("token")
 		if err != nil {
-			if strings.HasPrefix(c.Request.URL.Path, "/api") {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-				c.Abort()
-				return
-			}
-			c.Redirect(http.StatusFound, "/api/login")
+			c.Redirect(http.StatusFound, "/login")
 			c.Abort()
 			return
 		}
 		token, err := validateToken(tokenString)
 		if err != nil || !token.Valid {
-			if strings.HasPrefix(c.Request.URL.Path, "/api") {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-				c.Abort()
-				return
-			}
-			// Обычная страница — редирект на login.html
-			c.Redirect(http.StatusFound, "/api/login")
+			c.Redirect(http.StatusFound, "/login")
 			c.Abort()
 			return
 		}
@@ -92,7 +81,7 @@ func signinHandler(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("token", tokenString, 300, "/", "", false, true)
+	c.SetCookie("token", tokenString, 3000, "/", "", false, true)
 	c.JSON(http.StatusOK, gin.H{
 		"token": tokenString,
 		"roles": roles, // отдаём и в ответе
