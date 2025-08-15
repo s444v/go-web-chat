@@ -54,7 +54,6 @@ func signinHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
-
 	ok, roles, err := database.CheckPass(creds.Username, creds.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -64,7 +63,6 @@ func signinHandler(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid username or password"})
 		return
 	}
-
 	expirationTime := time.Now().Add(5 * time.Minute)
 	claims := &Claims{
 		Username: creds.Username,
@@ -73,7 +71,6 @@ func signinHandler(c *gin.Context) {
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
