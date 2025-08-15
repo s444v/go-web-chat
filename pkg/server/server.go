@@ -7,7 +7,6 @@ import (
 
 func NewServer() *gin.Engine {
 	router := gin.Default()
-	// router.Use(cors.Default())
 	api.HandlersInit(router)
 	return router
 }

@@ -61,7 +61,7 @@ func signinHandler(c *gin.Context) {
 	expirationTime := time.Now().Add(5 * time.Minute)
 	claims := &Claims{
 		Username: creds.Username,
-		Role:     strings.Join(roles, ","), // можно хранить через запятую
+		Role:     strings.Join(roles, ","),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},

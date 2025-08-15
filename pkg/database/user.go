@@ -6,7 +6,6 @@ type User struct {
 	Email string `db:"email" json:"email"`
 }
 
-// Функция для реализации SELECT запроса в базу данных, для поиска пользователя по параметру search
 func GetUsers(limit int, search string) ([]*User, error) {
 	var users []*User
 

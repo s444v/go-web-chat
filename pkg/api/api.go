@@ -15,7 +15,7 @@ func HandlersInit(router *gin.Engine) {
 	auth.GET("/api/users", getUsers)
 	auth.GET("/mainpage", getMainpage)
 	router.NoRoute(func(c *gin.Context) {
-		c.Redirect(http.StatusMovedPermanently, "/mainpage")
+		c.Redirect(http.StatusMovedPermanently, "/login")
 	})
 }
 

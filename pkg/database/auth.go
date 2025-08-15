@@ -18,12 +18,12 @@ func CheckPass(username, password string) (bool, []string, error) {
 
 	err := DB.QueryRow(query, username).Scan(&userID, &hashedPassword)
 	if err == sql.ErrNoRows {
-		return false, nil, nil // пользователя нет
+		return false, nil, nil
 	} else if err != nil {
 		return false, nil, err
 	}
 	if bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)) != nil {
-		return false, nil, nil // пароль неверный
+		return false, nil, nil
 	}
 	rolesQuery := `
 		SELECT r.role_name
