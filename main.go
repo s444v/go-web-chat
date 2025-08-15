@@ -16,5 +16,5 @@ func main() {
 	}
 	defer database.DB.Close()
 	router := server.NewServer()
-	router.Run("localhost:8080")
+	router.Run(":8080")
 }
