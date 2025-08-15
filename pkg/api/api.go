@@ -2,13 +2,23 @@ package api
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 const LIMIT = 50
 
 func HandlersInit(router *gin.Engine) {
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"}, // или конкретные домены, например "http://localhost:3000"
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 	router.GET("/login", getLoginpage)
 	router.POST("/api/login", signinHandler)
 	auth := router.Group("/", authCookieMiddleware())
