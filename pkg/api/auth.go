@@ -27,14 +27,12 @@ func authCookieMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString, err := c.Cookie("token")
 		if err != nil {
-			c.Redirect(http.StatusFound, "/login")
-			c.Abort()
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
 		token, err := validateToken(tokenString)
 		if err != nil || !token.Valid {
-			c.Redirect(http.StatusFound, "/login")
-			c.Abort()
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token or token expired"})
 			return
 		}
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
