@@ -173,17 +173,7 @@ form.addEventListener('submit', async (e) => {
             errorBox.style.display = 'block';
             errorBox.textContent = data.error || 'Ошибка входа';
         } else {
-            const page = await fetch('/', { credentials: 'include' });
-            if (!page.ok) {
-                errorBox.style.display = 'block';
-                errorBox.textContent = 'Не удалось загрузить главную страницу';
-                return;
-            }
-
-            const html = await page.text();
-            document.open();
-            document.write(html);
-            document.close();
+            window.location.href = '/mainpage';
         }
     } catch (err) {
         errorBox.style.display = 'block';

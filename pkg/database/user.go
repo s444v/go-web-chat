@@ -30,7 +30,6 @@ func GetUsers(limit int, search string) ([]*User, error) {
         LIMIT :limit
     `
 
-	// Выполняем запрос с именованными параметрами
 	stmt, err := DB.PrepareNamed(baseQuery)
 	if err != nil {
 		return nil, err

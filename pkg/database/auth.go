@@ -6,7 +6,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// CheckPass проверяет пароль и возвращает список ролей пользователя.
 func CheckPass(username, password string) (bool, []string, error) {
 	query := `
 		SELECT u.id, p.password_hash
@@ -26,8 +25,6 @@ func CheckPass(username, password string) (bool, []string, error) {
 	if bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)) != nil {
 		return false, nil, nil // пароль неверный
 	}
-
-	// Достаём роли пользователя
 	rolesQuery := `
 		SELECT r.role_name
 		FROM user_roles ur

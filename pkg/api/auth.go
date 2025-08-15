@@ -25,7 +25,6 @@ type Claims struct {
 
 func authCookieMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 1. Читаем токен из cookie
 		tokenString, err := c.Cookie("token")
 		if err != nil {
 			c.Redirect(http.StatusFound, "/login")
@@ -38,8 +37,6 @@ func authCookieMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
-		// 3. Достаём данные из claims и кладём в контекст
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			c.Set("userID", claims["user_id"])
 		}
@@ -81,7 +78,7 @@ func signinHandler(c *gin.Context) {
 	c.SetCookie("token", tokenString, 3000, "/", "", false, true)
 	c.JSON(http.StatusOK, gin.H{
 		"token": tokenString,
-		"roles": roles, // отдаём и в ответе
+		"roles": roles,
 	})
 }
 
