@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <link rel="icon" href="favicon_io/favicon.ico" type="image/x-icon">
+      <link rel="icon" href="favicon_io/favicon.ico" type="image/x-icon">
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Вход</title>
+<title>Регистрация</title>
 <style>
     :root {
         --bg: #0f172a; /* slate-900 */
@@ -100,34 +100,45 @@
 </head>
 <body>
 <main class="card" role="main">
-    <h1>Войти</h1>
-    <p class="subtle">Введите логин и пароль, чтобы продолжить.</p>
+    <h1>Регистрация</h1>
+    <p class="subtle">Заполните поля, чтобы создать новый аккаунт.</p>
 
     <div id="error" class="error" role="alert" aria-live="assertive"></div>
 
-    <form id="loginForm" novalidate>
+    <form id="registerForm" novalidate>
         <div class="field">
             <label for="username">Логин</label>
             <input id="username" name="username" class="input" type="text" autocomplete="username" placeholder="ваш логин" required maxlength="128" />
         </div>
 
+        <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" class="input" type="email" autocomplete="email" placeholder="ваш email" required maxlength="128" />
+        </div>
+
         <div class="field password-wrap">
             <label for="password">Пароль</label>
-            <input id="password" name="password" class="input" type="password" autocomplete="current-password" placeholder="••••••••" required minlength="4" />
+            <input id="password" name="password" class="input" type="password" autocomplete="new-password" placeholder="••••••••" required minlength="4" />
             <button type="button" class="toggle-btn" onclick="togglePassword()">👁️</button>
         </div>
 
+        <div class="field password-wrap">
+            <label for="confirmPassword">Повторите пароль</label>
+            <input id="confirmPassword" name="confirmPassword" class="input" type="password" autocomplete="new-password" placeholder="••••••••" required minlength="4" />
+            <button type="button" class="toggle-btn" onclick="toggleConfirmPassword()">👁️</button>
+        </div>
+
         <button id="submitBtn" class="btn" type="submit">
-            <span id="btnText">Войти</span>
+            <span id="btnText">Зарегистрироваться</span>
             <span id="btnSpinner" style="display:none">⏳</span>
         </button>
 
         <div class="row">
             <span></span>
-                <a href="/register" class="link-btn">Зарегистрироваться</a>
+            <a href="/login" class="link-btn">Уже есть аккаунт?</a>
         </div>
 
-        <div class="footer">Нажимая «Войти», вы соглашаетесь с условиями использования.</div>
+        <div class="footer">Нажимая «Зарегистрироваться», вы соглашаетесь с условиями использования.</div>
     </form>
 </main>
 
@@ -138,7 +149,13 @@ function togglePassword() {
     input.focus();
 }
 
-const form = document.getElementById('loginForm');
+function toggleConfirmPassword() {
+    const input = document.getElementById('confirmPassword');
+    input.type = input.type === 'password' ? 'text' : 'password';
+    input.focus();
+}
+
+const form = document.getElementById('registerForm');
 const errorBox = document.getElementById('error');
 const submitBtn = document.getElementById('submitBtn');
 const btnText = document.getElementById('btnText');
@@ -153,28 +170,37 @@ form.addEventListener('submit', async (e) => {
         return;
     }
 
+    const password = document.getElementById('password').value.trim();
+    const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+    if (password !== confirmPassword) {
+        errorBox.style.display = 'block';
+        errorBox.textContent = 'Пароли не совпадают.';
+        return;
+    }
+
     submitBtn.disabled = true;
     btnText.style.display = 'none';
     btnSpinner.style.display = 'inline';
 
     const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value.trim();
+    const email = document.getElementById('email').value.trim();
 
     try {
-        const res = await fetch('/api/login', {
+        const res = await fetch('/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'include', // важно, чтобы cookie сохранилась
-            body: JSON.stringify({ username, password })
-        });
+            body: JSON.stringify({ username, email, password })
+        }
+    );
 
         const data = await res.json();
 
         if (!res.ok) {
             errorBox.style.display = 'block';
-            errorBox.textContent = data.error || 'Ошибка входа';
+            errorBox.textContent = data.error || 'Ошибка регистрации';
         } else {
-            window.location.href = '/mainpage';
+            window.location.href = '/login';
         }
     } catch (err) {
         errorBox.style.display = 'block';
@@ -185,7 +211,6 @@ form.addEventListener('submit', async (e) => {
         btnSpinner.style.display = 'none';
     }
 });
-
 </script>
 </body>
 </html>

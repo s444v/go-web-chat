@@ -10,14 +10,12 @@ import (
 	"github.com/s444v/go-web-chat/pkg/database"
 )
 
-func getLoginpage(c *gin.Context) {
+func getLoginPage(c *gin.Context) {
 	tokenString, err := c.Cookie("token")
 	if err == nil {
-		token, err := validateToken(tokenString)
+		token, _, err := validateToken(tokenString)
 		if err == nil && token.Valid {
 			c.Redirect(http.StatusFound, "/mainpage")
-			c.Abort()
-			return
 		}
 	}
 	c.File("./web/login.html")

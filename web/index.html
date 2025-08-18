@@ -1,143 +1,158 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>go-web-chat</title>
+  <link rel="icon" href="favicon_io/favicon.ico" type="image/x-icon">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GO-WEB-CHAT</title>
   <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --muted: #9ca3af;
+      --text: #e5e7eb;
+      --accent: #2563eb;
+      --accent-2: #60a5fa;
+      --danger: #ef4444;
+      --ring: rgba(96,165,250,.45);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
     body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
       margin: 0;
-      padding: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 10% 10%, rgba(96,165,250,.12), transparent 60%),
+                  radial-gradient(1000px 600px at 90% 20%, rgba(34,197,94,.08), transparent 55%),
+                  var(--bg);
+      display: grid;
+      place-items: center;
+      padding: 24px;
     }
-
-    #app {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 1rem;
-      height: 100vh;
+    .card {
+      width: 100%;
+      max-width: 640px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(148,163,184,.2);
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      padding: 28px;
     }
-
-    input {
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      width: 250px;
+    h1 {
+      margin: 0 0 18px 0;
+      font-weight: 700;
+      letter-spacing: .2px;
+      font-size: 24px;
     }
-
-    button {
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: 0.2s;
+    .input {
+      width: 100%;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,.25);
+      background: rgba(17,24,39,.6);
+      color: var(--text);
+      outline: none;
+      transition: box-shadow .15s ease, border-color .15s ease;
     }
+    .input::placeholder { color: #9ca3af; }
+    .input:focus { border-color: var(--accent-2); box-shadow: 0 0 0 4px var(--ring); }
 
-    button:hover {
-      transform: scale(1.05);
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      font-weight: 600; letter-spacing: .2px;
+      border-radius: 12px; border: 1px solid rgba(37,99,235,.6);
+      background: linear-gradient(180deg, var(--accent), #1d4ed8);
+      color: white; cursor: pointer;
+      transition: transform .06s ease, filter .15s ease, box-shadow .15s ease;
+      box-shadow: 0 8px 20px rgba(37,99,235,.35);
     }
+    .btn:hover { filter: brightness(1.05); }
+    .btn:active { transform: translateY(1px); }
 
-    .btn-search {
-      background: #4CAF50;
-      color: white;
-    }
+    .btn-search { background: linear-gradient(180deg, #16a34a, #15803d); border-color: #16a34a; box-shadow: 0 8px 20px rgba(22,163,74,.35); }
+    .btn-logout { background: linear-gradient(180deg, #2563eb, #1d4ed8); border-color: #2563eb; box-shadow: 0 8px 20px rgba(37,99,235,.35); }
+    .btn-delete { background: linear-gradient(180deg, #dc2626, #b91c1c); border-color: #dc2626; box-shadow: 0 8px 20px rgba(220,38,38,.35); }
 
-    .btn-logout {
-      background: #2196F3;
-      color: white;
-    }
-
-    .btn-delete {
-      background: #f44336;
-      color: white;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-
+    ul { list-style: none; padding: 0; margin: 0; }
     li {
-      background: white;
-      padding: 0.5rem;
-      margin: 0.25rem 0;
-      border-radius: 6px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      background: rgba(17,24,39,.6);
+      padding: 10px;
+      margin: 6px 0;
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,.25);
+      color: var(--text);
     }
+
+    .actions { display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: center; }
   </style>
 </head>
 <body>
+  <main class="card">
+    <h1>GO-WEB-CHAT</h1>
 
-<div id="app">
-  <h1>GO-WEB-CHAT</h1>
+    <input v-model="query" class="input" type="text" placeholder="Введите текст" />
+    <button class="btn btn-search" @click="fetchAccounts">Найти</button>
 
-  <input
-          v-model="query"
-          type="text"
-          placeholder="Введите текст"
-  />
-  <button class="btn-search" @click="fetchUsers">Найти</button>
+    <div v-if="users.length">
+      <h3>Результаты поиска:</h3>
+      <ul>
+        <li v-for="(user, index) in users" :key="index">
+          {{ user.name }} — {{ user.email }}
+        </li>
+      </ul>
+    </div>
 
-  <div v-if="users.length">
-    <h3>Результаты поиска:</h3>
-    <ul>
-      <li v-for="(user, index) in users" :key="index">
-        {{ user.name }} — {{ user.email }}
-      </li>
-    </ul>
-  </div>
+    <div class="actions">
+      <button class="btn btn-logout" @click="logout">Выйти</button>
+      <button class="btn btn-delete" @click="deleteAccount">Удалить аккаунт</button>
+    </div>
+  </main>
 
-  <!-- Кнопки управления -->
-  <div style="margin-top: 2rem; display: flex; gap: 1rem;">
-    <button class="btn-logout" @click="logout">Выйти</button>
-    <button class="btn-delete" @click="deleteAccount">Удалить аккаунт</button>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script>
-  new Vue({
-    el: '#app',
-    data: {
-      query: '',
-      users: []
-    },
-    methods: {
-      async fetchAccounts() {
-        try {
-          const response = await axios.get(`/api/accounts`, {
-            params: { search: this.query }
-          });
-          this.users = response.data;
-        } catch (error) {
-          console.error("Ошибка при получении данных:", error);
-        }
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    new Vue({
+      el: 'main',
+      data: {
+        query: '',
+        users: []
       },
-      async logout() {
-        try {
-          await axios.post('/api/logout');
-          alert("Вы вышли из аккаунта");
-          window.location.href = "/login"; // редирект на страницу логина
-        } catch (error) {
-          console.error("Ошибка выхода:", error);
-        }
-      },
-      async deleteAccount() {
-        if (!confirm("Вы уверены, что хотите удалить аккаунт?")) return;
-        try {
-          await axios.delete('/api/delete-account');
-          alert("Аккаунт удалён");
-          window.location.href = "/login"; // редирект на регистрацию
-        } catch (error) {
-          console.error("Ошибка удаления:", error);
+      methods: {
+        async fetchAccounts() {
+          try {
+            const response = await axios.get(`/api/accounts`, {
+              params: { search: this.query }
+            });
+            this.users = response.data;
+          } catch (error) {
+            console.error("Ошибка при получении данных:", error);
+          }
+        },
+        async logout() {
+          try {
+            await axios.post('/api/logout');
+            alert("Вы вышли из аккаунта");
+            window.location.href = "/login";
+          } catch (error) {
+            console.error("Ошибка выхода:", error);
+          }
+        },
+        async deleteAccount() {
+          if (!confirm("Вы уверены, что хотите удалить аккаунт?")) return;
+          try {
+            await axios.delete('/api/delete-account');
+            alert("Аккаунт удалён");
+            window.location.href = "/login";
+          } catch (error) {
+            console.error("Ошибка удаления:", error);
+          }
         }
       }
-    }
-  })
-</script>
+    });
+  </script>
 </body>
 </html>

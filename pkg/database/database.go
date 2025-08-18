@@ -12,6 +12,12 @@ import (
 
 var DB *sqlx.DB
 
+type Account struct {
+	ID    int    `db:"id" json:"id"`
+	Name  string `db:"name" json:"name"`
+	Email string `db:"email" json:"email"`
+}
+
 func DBinit() error {
 	err := godotenv.Load()
 	if err != nil {

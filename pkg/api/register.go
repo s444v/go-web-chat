@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func getMainPage(c *gin.Context) {
+func getRegPage(c *gin.Context) {
 	c.Status(http.StatusOK)
-	c.File("./web/index.html")
+	c.File("./web/registr.html")
 }
