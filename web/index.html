@@ -2,28 +2,84 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>STEPA I LOVE YOU</title>
+    <title>go-web-chat</title>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+
     #app {
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       gap: 1rem;
+      height: 100vh;
+    }
+
+    input {
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      width: 250px;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    .btn-search {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .btn-logout {
+      background: #2196F3;
+      color: white;
+    }
+
+    .btn-delete {
+      background: #f44336;
+      color: white;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background: white;
+      padding: 0.5rem;
+      margin: 0.25rem 0;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
   </style>
 </head>
 <body>
 
 <div id="app">
-  <h1>HI!</h1>
+  <h1>GO-WEB-CHAT</h1>
 
   <input
           v-model="query"
           type="text"
           placeholder="Введите текст"
   />
-  <button @click="fetchUsers">Найти</button>
+  <button class="btn-search" @click="fetchUsers">Найти</button>
 
   <div v-if="users.length">
     <h3>Результаты поиска:</h3>
@@ -33,7 +89,14 @@
       </li>
     </ul>
   </div>
+
+  <!-- Кнопки управления -->
+  <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+    <button class="btn-logout" @click="logout">Выйти</button>
+    <button class="btn-delete" @click="deleteAccount">Удалить аккаунт</button>
+  </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
@@ -44,19 +107,37 @@
       users: []
     },
     methods: {
-      async fetchUsers() {
+      async fetchAccounts() {
         try {
-          const response = await axios.get(`/api/users`, {
+          const response = await axios.get(`/api/accounts`, {
             params: { search: this.query }
           });
           this.users = response.data;
         } catch (error) {
           console.error("Ошибка при получении данных:", error);
         }
+      },
+      async logout() {
+        try {
+          await axios.post('/api/logout');
+          alert("Вы вышли из аккаунта");
+          window.location.href = "/login"; // редирект на страницу логина
+        } catch (error) {
+          console.error("Ошибка выхода:", error);
+        }
+      },
+      async deleteAccount() {
+        if (!confirm("Вы уверены, что хотите удалить аккаунт?")) return;
+        try {
+          await axios.delete('/api/delete-account');
+          alert("Аккаунт удалён");
+          window.location.href = "/login"; // редирект на регистрацию
+        } catch (error) {
+          console.error("Ошибка удаления:", error);
+        }
       }
     }
   })
-
 </script>
 </body>
 </html>

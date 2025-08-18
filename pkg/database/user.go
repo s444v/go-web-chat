@@ -1,13 +1,13 @@
 package database
 
-type User struct {
+type Account struct {
 	ID    int    `db:"id" json:"id"`
 	Name  string `db:"name" json:"name"`
 	Email string `db:"email" json:"email"`
 }
 
-func GetUsers(limit int, search string) ([]*User, error) {
-	var users []*User
+func GetAccounts(limit int, search string) ([]*Account, error) {
+	var users []*Account
 
 	baseQuery := `
         SELECT * 
@@ -41,7 +41,7 @@ func GetUsers(limit int, search string) ([]*User, error) {
 	}
 
 	if users == nil {
-		users = make([]*User, 0)
+		users = make([]*Account, 0)
 	}
 	return users, nil
 }
