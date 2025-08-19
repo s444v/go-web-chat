@@ -46,6 +46,7 @@ func HandlersInit(router *gin.Engine) {
 	auth.GET("/api/accounts", getAccounts)
 	auth.GET("/mainpage", getMainPage)
 	auth.DELETE("api/delete-account", deleteAccount)
+	auth.GET("/ws", wsHandler)
 
 	router.NoRoute(func(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "/login")
