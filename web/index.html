@@ -94,19 +94,37 @@
   <main class="card">
     <h1>GO-WEB-CHAT</h1>
 
-    <input v-model="query" class="input" type="text" placeholder="Введите текст" />
-    <button class="btn btn-search" @click="fetchAccounts">Найти</button>
+    <!-- Поиск -->
+    <div v-if="!selectedUser">
+      <input v-model="query" class="input" type="text" placeholder="Введите текст" />
+      <button class="btn btn-search" @click="fetchAccounts">Найти</button>
 
-    <div v-if="users.length">
-      <h3>Результаты поиска:</h3>
-      <ul>
-        <li v-for="(user, index) in users" :key="index">
-          {{ user.name }} — {{ user.email }}
-        </li>
-      </ul>
+      <div v-if="users.length">
+        <h3>Результаты поиска:</h3>
+        <ul>
+          <li v-for="(user, index) in users" :key="index" @click="openChat(user)" style="cursor:pointer">
+            {{ user.name }} — {{ user.email }}
+          </li>
+        </ul>
+      </div>
     </div>
 
-    <div class="actions">
+    <!-- Чат -->
+    <div v-else>
+      <h3>Чат с {{ selectedUser.name }}</h3>
+      <ul>
+        <li v-for="(msg, index) in messages" :key="index">
+          <b>{{ msg.from === myId ? "Вы" : msg.from }}:</b> {{ msg.text }}
+        </li>
+      </ul>
+
+      <input v-model="newMessage" class="input" placeholder="Введите сообщение..." @keyup.enter="sendMessage" />
+      <button class="btn" @click="sendMessage">Отправить</button>
+      <button class="btn btn-delete" @click="closeChat">Закрыть чат</button>
+    </div>
+
+    <!-- Кнопки аккаунта -->
+    <div class="actions" v-if="!selectedUser">
       <button class="btn btn-logout" @click="logout">Выйти</button>
       <button class="btn btn-delete" @click="deleteAccount">Удалить аккаунт</button>
     </div>
@@ -119,7 +137,12 @@
       el: 'main',
       data: {
         query: '',
-        users: []
+        users: [],
+        selectedUser: null,
+        messages: [],
+        newMessage: '',
+        ws: null,
+        myId: 'user123' // ⚠️ заменить на реальный ID текущего пользователя (например, из JWT)
       },
       methods: {
         async fetchAccounts() {
@@ -131,6 +154,41 @@
           } catch (error) {
             console.error("Ошибка при получении данных:", error);
           }
+        },
+        openChat(user) {
+          this.selectedUser = user;
+          this.messages = [];
+
+          // Подключение к WebSocket
+          this.ws = new WebSocket(`ws://localhost:8080/ws?id=${this.myId}`);
+
+          this.ws.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+            this.messages.push(msg);
+          };
+
+          this.ws.onopen = () => {
+            console.log("WebSocket соединение установлено");
+          };
+
+          this.ws.onclose = () => {
+            console.log("WebSocket соединение закрыто");
+          };
+        },
+        sendMessage() {
+          if (!this.newMessage.trim()) return;
+          const msg = {
+            to: this.selectedUser.id, // id выбранного пользователя
+            text: this.newMessage
+          };
+          this.ws.send(JSON.stringify(msg));
+          this.messages.push({ from: this.myId, text: this.newMessage });
+          this.newMessage = '';
+        },
+        closeChat() {
+          if (this.ws) this.ws.close();
+          this.selectedUser = null;
+          this.messages = [];
         },
         async logout() {
           try {
