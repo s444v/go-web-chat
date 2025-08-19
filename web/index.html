@@ -142,7 +142,7 @@
         messages: [],
         newMessage: '',
         ws: null,
-        myId: 'user123' // ⚠️ заменить на реальный ID текущего пользователя (например, из JWT)
+        myUsername: null
       },
       methods: {
         async fetchAccounts() {
@@ -160,7 +160,7 @@
           this.messages = [];
 
           // Подключение к WebSocket
-          this.ws = new WebSocket(`ws://localhost:8080/ws?id=${this.myId}`);
+          this.ws = new WebSocket(`ws://localhost:8080/ws`);
 
           this.ws.onmessage = (event) => {
             const msg = JSON.parse(event.data);
@@ -178,11 +178,11 @@
         sendMessage() {
           if (!this.newMessage.trim()) return;
           const msg = {
-            to: this.selectedUser.id, // id выбранного пользователя
+            to: this.selectedUser.name, // id выбранного пользователя
             text: this.newMessage
           };
           this.ws.send(JSON.stringify(msg));
-          this.messages.push({ from: this.myId, text: this.newMessage });
+          this.messages.push({ from: "me", text: this.newMessage });
           this.newMessage = '';
         },
         closeChat() {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/s444v/go-web-chat/pkg/database"
 )
 
 var upgrader = websocket.Upgrader{
@@ -15,31 +16,42 @@ var upgrader = websocket.Upgrader{
 }
 
 type Client struct {
-	ID   string
-	Conn *websocket.Conn
+	Username string
+	Conn     *websocket.Conn
+}
+
+type Message struct {
+	To   string `json:"to"`
+	Text string `json:"text"`
 }
 
 var clients = make(map[string]*Client)
 
 func wsHandler(c *gin.Context) {
-	userID := c.Query("id")
+	username := c.GetString("username")
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		fmt.Println("upgrade err:", err)
 		return
 	}
-	client := &Client{ID: userID, Conn: conn}
-	clients[userID] = client
+	client := &Client{Username: username, Conn: conn}
+	clients[username] = client
 	defer func() {
 		conn.Close()
-		delete(clients, userID)
+		delete(clients, username)
 	}()
 	for {
-		_, msg, err := conn.ReadMessage()
+		var msg Message
+		err = conn.ReadJSON(&msg)
 		if err != nil {
-			fmt.Println("read error", err)
-			break
+			fmt.Println("cant save messege", err)
+			continue
 		}
-		fmt.Printf("messege from %s: %s\n", userID, msg)
+		err = database.AddMessege(username, msg.To, msg.Text)
+		if err != nil {
+			fmt.Println("cant save messege", err)
+			continue
+		}
+		fmt.Printf("messege from %s: %s\n", username, msg)
 	}
 }
