@@ -8,7 +8,11 @@ import (
 )
 
 func getAccounts(c *gin.Context) {
-	accounts, err := database.GetAccounts(LIMIT, c.Query("search"))
+	userId, err := database.GetUserId(c.GetString("username"))
+	if err != nil {
+		return
+	}
+	accounts, err := database.GetAccounts(userId, LIMIT, c.Query("search"))
 	if err != nil {
 		return
 	}

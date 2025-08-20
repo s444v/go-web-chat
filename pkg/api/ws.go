@@ -16,42 +16,61 @@ var upgrader = websocket.Upgrader{
 }
 
 type Client struct {
-	Username string
-	Conn     *websocket.Conn
+	UserId int
+	Conn   *websocket.Conn
 }
 
 type Message struct {
-	To   string `json:"to"`
-	Text string `json:"text"`
+	ChatID int    `json:"chat_id"`
+	Sender string `json:"sender"`
+	Text   string `json:"text"`
 }
 
-var clients = make(map[string]*Client)
+var clients = make(map[int]*Client)
 
 func wsHandler(c *gin.Context) {
 	username := c.GetString("username")
+	userId, err := database.GetUserId(username)
+	if err != nil {
+		fmt.Println("err:", err)
+		return
+	}
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		fmt.Println("upgrade err:", err)
 		return
 	}
-	client := &Client{Username: username, Conn: conn}
-	clients[username] = client
+	client := &Client{UserId: userId, Conn: conn}
+	clients[userId] = client
 	defer func() {
 		conn.Close()
-		delete(clients, username)
+		delete(clients, userId)
 	}()
 	for {
 		var msg Message
 		err = conn.ReadJSON(&msg)
 		if err != nil {
-			fmt.Println("cant save messege", err)
-			continue
+			fmt.Println("cant save message", err)
+			break
 		}
-		err = database.AddMessege(username, msg.To, msg.Text)
+
+		// сохраняем в БД
+		err = database.AddMessage(msg.ChatID, userId, msg.Text)
 		if err != nil {
-			fmt.Println("cant save messege", err)
-			continue
+			fmt.Println("cant save message", err)
+			break
 		}
-		fmt.Printf("messege from %s: %s\n", username, msg)
+
+		// проставляем отправителя перед рассылкой
+		msg.Sender = username
+
+		fmt.Printf("message from %s: %s\n", username, msg.Text)
+
+		// рассылаем всем клиентам
+		for _, client := range clients {
+			if err := client.Conn.WriteJSON(msg); err != nil {
+				fmt.Println("cant send message", err)
+			}
+		}
 	}
 }

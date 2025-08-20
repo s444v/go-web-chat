@@ -8,43 +8,54 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func GetAccounts(limit int, search string) ([]*Account, error) {
+func GetUserId(username string) (int, error) {
+	var userId int
+	err := DB.Get(&userId, "SELECT id FROM users WHERE name = $1", username)
+	if err != nil {
+		return 0, err
+	}
+	return userId, nil
+}
+
+func GetAccounts(userId, limit int, search string) ([]*Account, error) {
 	var users []*Account
 
-	baseQuery := `
-        SELECT * 
-        FROM users
-    `
+	query := `
+		SELECT id, name, email
+		FROM users
+		WHERE id != :user_id
+	`
 
 	params := map[string]interface{}{
-		"limit": limit,
+		"user_id": userId,
+		"limit":   limit,
 	}
 
 	if search != "" {
-		baseQuery += `
-            WHERE name ILIKE :search OR email ILIKE :search
-        `
+		query += " AND (name ILIKE :search OR email ILIKE :search)"
 		params["search"] = "%" + search + "%"
 	}
 
-	baseQuery += `
-        LIMIT :limit
-    `
+	query += " ORDER BY id LIMIT :limit"
 
-	stmt, err := DB.PrepareNamed(baseQuery)
+	rows, err := DB.NamedQuery(query, params)
 	if err != nil {
 		return nil, err
 	}
-	defer stmt.Close()
+	defer rows.Close()
 
-	err = stmt.Select(&users, params)
-	if err != nil {
-		return nil, err
+	for rows.Next() {
+		var acc Account
+		if err := rows.StructScan(&acc); err != nil {
+			return nil, err
+		}
+		users = append(users, &acc)
 	}
 
 	if users == nil {
 		users = make([]*Account, 0)
 	}
+
 	return users, nil
 }
 

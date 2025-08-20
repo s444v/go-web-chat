@@ -42,10 +42,13 @@ func HandlersInit(router *gin.Engine) {
 	router.Static("/favicon_io", "./web/favicon_io")
 
 	auth := router.Group("/", authCookieMiddleware())
+	auth.GET("api/chat-id", getChatId)
+	auth.GET("api/messages", messagesHandler)
+	auth.GET("api/me", getUsername)
 	auth.POST("/api/logout", logoutHandler)
 	auth.GET("/api/accounts", getAccounts)
-	auth.GET("/mainpage", getMainPage)
 	auth.DELETE("api/delete-account", deleteAccount)
+	auth.GET("/mainpage", getMainPage)
 	auth.GET("/ws", wsHandler)
 
 	router.NoRoute(func(c *gin.Context) {

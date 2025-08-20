@@ -114,7 +114,7 @@
       <h3>Чат с {{ selectedUser.name }}</h3>
       <ul>
         <li v-for="(msg, index) in messages" :key="index">
-          <b>{{ msg.from === myId ? "Вы" : msg.from }}:</b> {{ msg.text }}
+          <b>{{ msg.sender === myUsername ? "Вы" : msg.sender }}:</b> {{ msg.text }}
         </li>
       </ul>
 
@@ -133,84 +133,121 @@
   <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
-    new Vue({
-      el: 'main',
-      data: {
-        query: '',
-        users: [],
-        selectedUser: null,
-        messages: [],
-        newMessage: '',
-        ws: null,
-        myUsername: null
-      },
-      methods: {
-        async fetchAccounts() {
-          try {
-            const response = await axios.get(`/api/accounts`, {
-              params: { search: this.query }
-            });
-            this.users = response.data;
-          } catch (error) {
-            console.error("Ошибка при получении данных:", error);
-          }
-        },
-        openChat(user) {
-          this.selectedUser = user;
-          this.messages = [];
-
-          // Подключение к WebSocket
-          this.ws = new WebSocket(`ws://localhost:8080/ws`);
-
-          this.ws.onmessage = (event) => {
-            const msg = JSON.parse(event.data);
-            this.messages.push(msg);
-          };
-
-          this.ws.onopen = () => {
-            console.log("WebSocket соединение установлено");
-          };
-
-          this.ws.onclose = () => {
-            console.log("WebSocket соединение закрыто");
-          };
-        },
-        sendMessage() {
-          if (!this.newMessage.trim()) return;
-          const msg = {
-            to: this.selectedUser.name, // id выбранного пользователя
-            text: this.newMessage
-          };
-          this.ws.send(JSON.stringify(msg));
-          this.messages.push({ from: "me", text: this.newMessage });
-          this.newMessage = '';
-        },
-        closeChat() {
-          if (this.ws) this.ws.close();
-          this.selectedUser = null;
-          this.messages = [];
-        },
-        async logout() {
-          try {
-            await axios.post('/api/logout');
-            alert("Вы вышли из аккаунта");
-            window.location.href = "/login";
-          } catch (error) {
-            console.error("Ошибка выхода:", error);
-          }
-        },
-        async deleteAccount() {
-          if (!confirm("Вы уверены, что хотите удалить аккаунт?")) return;
-          try {
-            await axios.delete('/api/delete-account');
-            alert("Аккаунт удалён");
-            window.location.href = "/login";
-          } catch (error) {
-            console.error("Ошибка удаления:", error);
-          }
-        }
+new Vue({
+  el: 'main',
+  data: {
+    query: '',
+    users: [],
+    selectedUser: null,
+    messages: [],
+    newMessage: '',
+    ws: null,
+    myUsername: null
+  },
+  async mounted() {
+    // узнаём имя текущего юзера
+    try {
+      const res = await axios.get("/api/me");
+      this.myUsername = res.data.username;
+    } catch (e) {
+      console.error("Не удалось получить имя юзера:", e);
+    }
+  },
+  methods: {
+    async fetchAccounts() {
+      try {
+        const response = await axios.get(`/api/accounts`, {
+          params: { search: this.query }
+        });
+        this.users = response.data;
+      } catch (error) {
+        console.error("Ошибка при получении данных:", error);
       }
+    },
+async openChat(user) {
+  this.selectedUser = user;
+  this.messages = [];
+
+  try {
+    // 👉 получаем chat_id для текущего пользователя и выбранного собеседника
+    const chatRes = await axios.get("/api/chat-id", {
+      params: { username: user.name }
     });
-  </script>
+    const chatId = chatRes.data.chat_id;
+    this.selectedUser.chat_id = chatId; // сохраняем прямо в объект пользователя
+
+    // 👉 загружаем историю сообщений
+    const res = await axios.get("/api/messages", {
+      params: { chat_id: chatId, limit: 50 }
+    });
+    this.messages = res.data;
+  } catch (err) {
+    console.error("Ошибка загрузки чата:", err);
+  }
+
+  // 👉 подключаем WebSocket
+  this.ws = new WebSocket(`ws://91.149.255.224:8080/ws`);
+
+  this.ws.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+
+    // фильтруем сообщения только для текущего чата
+    if (msg.chat_id === this.selectedUser.chat_id) {
+      this.messages.push(msg);
+    }
+  };
+
+  this.ws.onopen = () => {
+    console.log("WebSocket соединение установлено");
+  };
+
+  this.ws.onclose = () => {
+    console.log("WebSocket соединение закрыто");
+  };
+},
+sendMessage() {
+  if (!this.newMessage.trim()) return;
+  const msg = {
+    chat_id: this.selectedUser.chat_id,
+    text: this.newMessage
+  };
+  this.ws.send(JSON.stringify(msg));
+
+  // сразу добавляем в локальный список
+  // this.messages.push({
+  //   chat_id: this.selectedUser.chat_id,
+  //   sender: this.myUsername,
+  //   text: this.newMessage
+  // });
+
+  this.newMessage = '';
+},
+    closeChat() {
+      if (this.ws) this.ws.close();
+      this.selectedUser = null;
+      this.messages = [];
+    },
+    async logout() {
+      try {
+        await axios.post('/api/logout');
+        alert("Вы вышли из аккаунта");
+        window.location.href = "/login";
+      } catch (error) {
+        console.error("Ошибка выхода:", error);
+      }
+    },
+    async deleteAccount() {
+      if (!confirm("Вы уверены, что хотите удалить аккаунт?")) return;
+      try {
+        await axios.delete('/api/delete-account');
+        alert("Аккаунт удалён");
+        window.location.href = "/login";
+      } catch (error) {
+        console.error("Ошибка удаления:", error);
+      }
+    }
+  }
+});
+</script>
 </body>
 </html>

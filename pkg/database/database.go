@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
@@ -16,6 +17,16 @@ type Account struct {
 	ID    int    `db:"id" json:"id"`
 	Name  string `db:"name" json:"name"`
 	Email string `db:"email" json:"email"`
+}
+
+type Message struct {
+	ID        int       `json:"id"`
+	ChatID    int       `json:"chat_id"`
+	Sender    string    `json:"sender"`
+	Receiver  string    `json:"receiver"`
+	Text      string    `json:"text"`
+	CreatedAt time.Time `json:"created_at"`
+	IsRead    bool      `json:"is_read"`
 }
 
 func DBinit() error {
