@@ -36,20 +36,24 @@ VALUES (
 
 func GetMessages(chat_id, limit int) ([]*Message, error) {
 	rows, err := DB.Query(`
-		SELECT 
-			m.id,
-			m.chat_id,
-			u.name AS sender,        -- имя отправителя
-			r.name AS receiver,      -- имя получателя
-			m.content,
-			m.created_at,
-			m.is_read
-		FROM messages m
-		JOIN users u ON m.sender_id = u.id
-		JOIN users r ON m.recipient_id = r.id
-		WHERE m.chat_id = $1
-		ORDER BY m.created_at ASC
-		LIMIT $2;
+SELECT *
+FROM (
+    SELECT 
+        m.id,
+        m.chat_id,
+        u.name AS sender,
+        r.name AS receiver,
+        m.content,
+        m.created_at,
+        m.is_read
+    FROM messages m
+    JOIN users u ON m.sender_id = u.id
+    JOIN users r ON m.recipient_id = r.id
+    WHERE m.chat_id = $1
+    ORDER BY m.created_at DESC
+    LIMIT $2
+) sub
+ORDER BY created_at ASC;
 	`, chat_id, limit)
 	if err != nil {
 		fmt.Println(err)
